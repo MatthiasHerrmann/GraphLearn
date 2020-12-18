@@ -160,7 +160,7 @@ def find_all_isomorphisms(interface_graph, congruent_interface_graph):
 
 
 def substitute_core(graph, cip, congruent_cip):
-    
+
 
     # expand edges and remove old core
     graph = _edge_to_vertex(graph)
@@ -172,6 +172,9 @@ def substitute_core(graph, cip, congruent_cip):
     interface_map = next(find_all_isomorphisms(congruent_cip.interface, cip.interface))
     if len(interface_map) != len(cip.interface):
         logger.log(10, "isomorphism failed, likely due to hash collision")
+        return None
+    elif not graph.nodes():
+        logger.log(10, "graph empty after cip removal, either to small training graphs or to big radii")
         return None
 
     maxid = max(graph.nodes()) # if we die here, likely the cip covers the whole graph 

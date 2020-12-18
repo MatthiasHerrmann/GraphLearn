@@ -64,7 +64,7 @@ class LocalSubstitutionGraphGrammarCore(object):
     def _get_cips(self, graph):
         for core in self._get_cores(graph):
             x = self._get_cip(core=core, graph=graph)
-            if x:
+            if len(x.interface) > 0: # Empty interface
                 yield x
 
     def _get_cip(self, core=None, graph=None):

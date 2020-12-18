@@ -5,6 +5,11 @@ import graphlearn.lsgg_core_interface_pair as cip
 from ego import real_vectorize as rv
 from graphlearn import LSGG
 
+from random import sample as random_sample
+
+from scipy import sparse
+import numpy as np
+import structout as so
 
 # changes tothe base grammar: 
 # __init__: 
@@ -23,8 +28,8 @@ class LsggCoreVec(LSGG):
         (so i only need to compute the node vectorisation once)
         and transfer them to the CIPs when make_cip is called
     '''
-
-    def __init__(self,core_vec_decomposer=None,cipselector=[lambda x:x], **kwargs):
+    def __init__(self,core_vec_decomposer=None,cipselector=None, **kwargs):
+    #def __init__(self,core_vec_decomposer=None,cipselector=[lambda x:x], **kwargs):
         self.core_vec_decomposer = core_vec_decomposer
         self.cipselector = cipselector
 
@@ -35,19 +40,26 @@ class LsggCoreVec(LSGG):
     #  step one: cips get vectors 
     #########
 
-    def make_core_vector(self, core, graph, node_vectors): 
-        c_set = set(core.nodes())
-        core_ids = [i for i,n in enumerate(graph.nodes()) if n in c_set] 
-        return node_vectors[core_ids,:].sum(axis=0)
+    def make_core_vector(self, core, graph, node_vectors):
+#        c_set = set(core.nodes())
+#        core_ids = [i for i,n in enumerate(graph.nodes()) if n in c_set]
+        core_ids = core.nodes()
+        return sparse.csr_matrix(node_vectors[core_ids,:].sum(axis=0))
 
     def _get_cips(self, graph, filter = lambda x:x):
+        count = 0  #####
+        failcount = 0  #####
         exgraph = cip._edge_to_vertex(graph)
         matrix = vertex_vec(exgraph, self.core_vec_decomposer) 
         for core in self._get_cores(graph):
             x = self._get_cip(core=core, graph=graph)
             if x and filter(x.graph):
                 x.core_vec  = self.make_core_vector(x.graph, exgraph, matrix)
+                count += 1
+                if x.core_vec.sum() == 0:
+                    failcount += 1
                 yield x
+        print(f"Failed cips: {failcount}/{count} = {failcount/count}")
     
     def neighbors(self, graph, selectordata, filter = lambda x:True):
         """iterator over all neighbors of graph (that are conceiveable by the grammar)"""
@@ -70,7 +82,7 @@ def vertex_vec(graph, decomposer, bitmask = 2**14-1):
         rv.get_subgraphs_from_graph_component, decomposer, rv.convert),
         bitmask=bitmask)
 
-    data_matrix = rv.to_sparse_matrix(encoding, node_ids, bitmask+2)
+    data_matrix = rv._to_sparse_matrix(encoding, node_ids, bitmask+2)
 
     return data_matrix
 
