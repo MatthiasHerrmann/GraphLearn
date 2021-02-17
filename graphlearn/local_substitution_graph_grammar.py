@@ -39,8 +39,8 @@ class LocalSubstitutionGraphGrammarCore(object):
             self._double_radius_and_thickness()
 
     def _double_radius_and_thickness(self):
-        self.radii = [i * 2 for i in self.radii]
-        self.thickness = 2 * self.thickness
+        self.radii = [int(i * 2) for i in self.radii]
+        self.thickness = int(2 * self.thickness)
 
     def get(self):
         return [[(self.productions[interface][core].interface, self.productions[interface][core].graph) for core in self.productions[interface]] for interface in self.productions]
