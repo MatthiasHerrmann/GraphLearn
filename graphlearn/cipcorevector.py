@@ -47,19 +47,13 @@ class LsggCoreVec(LSGG):
         return sparse.csr_matrix(node_vectors[core_ids,:].sum(axis=0))
 
     def _get_cips(self, graph, filter = lambda x:x):
-        count = 0  #####
-        failcount = 0  #####
         exgraph = cip._edge_to_vertex(graph)
         matrix = vertex_vec(exgraph, self.core_vec_decomposer) 
         for core in self._get_cores(graph):
             x = self._get_cip(core=core, graph=graph)
-            if x and filter(x.graph):
+            if len(x.interface) > 0 and filter(x.graph):
                 x.core_vec  = self.make_core_vector(x.graph, exgraph, matrix)
-                count += 1
-                if x.core_vec.sum() == 0:
-                    failcount += 1
                 yield x
-        print(f"Failed cips: {failcount}/{count} = {failcount/count}")
     
     def neighbors(self, graph, selectordata, filter = lambda x:True):
         """iterator over all neighbors of graph (that are conceiveable by the grammar)"""
